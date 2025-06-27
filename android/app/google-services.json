@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "950388548524",
+    "project_id": "wordlune",
+    "storage_bucket": "wordlune.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950388548524:android:3d071e54da54533b691009",
+        "android_client_info": {
+          "package_name": "com.example.wordlune_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "950388548524-v0j80tok11ht3oqmtt3q4b78l5bg9om0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKnp-uAnrjOYL0eD-hwca4sKTSaMSCRCc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "950388548524-v0j80tok11ht3oqmtt3q4b78l5bg9om0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

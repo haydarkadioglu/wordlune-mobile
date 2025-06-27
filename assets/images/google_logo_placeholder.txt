@@ -1,0 +1,4 @@
+# Google Logo Placeholder
+# Bu dosya Google logo'su için placeholder'dır.
+# Gerçek Google logo'sunu buraya koyabilirsiniz.
+# Şimdilik kod içinde fallback icon kullanılacak.
