@@ -26,7 +26,7 @@ class CombinedScreenHeader extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+      padding: const EdgeInsets.fromLTRB(12, 40, 12, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [

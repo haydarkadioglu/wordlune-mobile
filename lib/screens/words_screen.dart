@@ -27,6 +27,8 @@ class _WordsScreenState extends State<WordsScreen> {
         title: const Text('My Words'),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
+        elevation: 2,
+        toolbarHeight: 56, // Standard height
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -168,12 +170,12 @@ class _WordsScreenState extends State<WordsScreen> {
                 }
                 
                 return GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.8,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                    childAspectRatio: MediaQuery.of(context).size.width > 600 ? 0.75 : 0.65,
+                    crossAxisSpacing: 6,
+                    mainAxisSpacing: 6,
                   ),
                   itemCount: words.length,
                   itemBuilder: (context, index) {

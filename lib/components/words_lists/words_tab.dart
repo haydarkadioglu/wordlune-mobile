@@ -41,7 +41,7 @@ class _WordsTabState extends State<WordsTab> {
         // Selection mode header
         if (_isSelectionMode)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             color: Theme.of(context).primaryColor.withOpacity(0.1),
             child: Row(
               children: [
@@ -72,7 +72,7 @@ class _WordsTabState extends State<WordsTab> {
         // Bulk action button (when not in selection mode)
         if (!_isSelectionMode)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -92,14 +92,16 @@ class _WordsTabState extends State<WordsTab> {
         // Category filter chips
         if (widget.selectedCategory.isNotEmpty)
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
               children: [
                 Chip(
                   label: Text(widget.selectedCategory),
                   backgroundColor: _getCategoryColor(widget.selectedCategory).withOpacity(0.2),
-                  deleteIcon: const Icon(Icons.close, size: 18),
+                  deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: widget.onCategoryCleared,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -209,12 +211,12 @@ class _WordsTabState extends State<WordsTab> {
 
   Widget _buildWordsList(List<Word> words) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       itemCount: words.length,
       itemBuilder: (context, index) {
         final word = words[index];
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 6),
           child: WordCard(
             word: word,
             columns: 1, // List view uses single column
@@ -232,12 +234,12 @@ class _WordsTabState extends State<WordsTab> {
 
   Widget _buildWordsGrid(List<Word> words, int columns) {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: columns == 4 ? 0.8 : 0.75,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+        childAspectRatio: columns == 4 ? 0.85 : 0.8,
       ),
       itemCount: words.length,
       itemBuilder: (context, index) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/firestore_service.dart';
 import '../models/word.dart';
 import '../models/word_list.dart';
@@ -34,6 +35,45 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedViewMode = prefs.getString('words_view_mode') ?? 'grid3';
+    
+    setState(() {
+      switch (savedViewMode) {
+        case 'list':
+          _viewMode = ViewMode.list;
+          break;
+        case 'grid3':
+          _viewMode = ViewMode.grid3;
+          break;
+        case 'grid4':
+          _viewMode = ViewMode.grid4;
+          break;
+        default:
+          _viewMode = ViewMode.grid3;
+      }
+    });
+  }
+
+  Future<void> _saveViewMode(ViewMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    String modeString;
+    switch (mode) {
+      case ViewMode.list:
+        modeString = 'list';
+        break;
+      case ViewMode.grid3:
+        modeString = 'grid3';
+        break;
+      case ViewMode.grid4:
+        modeString = 'grid4';
+        break;
+    }
+    await prefs.setString('words_view_mode', modeString);
   }
 
   @override
@@ -54,20 +94,23 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
             selectedCategory: _selectedCategory,
             onSearchPressed: _showSearchDialog,
             onAddPressed: _tabController.index == 0 ? _showAddWordDialog : _showCreateListDialog,
-            onViewModeChanged: (mode) => setState(() => _viewMode = mode),
+            onViewModeChanged: (mode) {
+              setState(() => _viewMode = mode);
+              _saveViewMode(mode);
+            },
             onCategoryChanged: (category) => setState(() => _selectedCategory = category),
           ),
           
           // Tab bar with custom pill design
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Container(
-              height: 50,
+              height: 45,
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.dark 
                     ? Colors.grey[800] 
                     : Colors.grey[100],
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(22.5),
               ),
               child: TabBar(
                 controller: _tabController,
@@ -75,10 +118,10 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.white
                       : Colors.black87,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(19),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsets.all(4),
+                indicatorPadding: const EdgeInsets.all(3),
                 labelColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.black87
                     : Colors.white,

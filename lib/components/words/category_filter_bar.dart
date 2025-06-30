@@ -15,14 +15,16 @@ class CategoryFilterBar extends StatelessWidget {
     if (selectedCategory.isEmpty) return const SizedBox.shrink();
     
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
           Chip(
             label: Text(selectedCategory),
             backgroundColor: _getCategoryColor(selectedCategory).withOpacity(0.2),
-            deleteIcon: const Icon(Icons.close, size: 18),
+            deleteIcon: const Icon(Icons.close, size: 16),
             onDeleted: () => onCategoryChanged(''),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
