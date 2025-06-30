@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../services/firestore_service.dart';
 import '../models/word.dart';
 import '../models/word_list.dart';
@@ -35,45 +37,251 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadViewMode();
+    // Load view mode synchronously first with default, then async load the saved preference
+    _loadViewModeSync();
   }
-
-  Future<void> _loadViewMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedViewMode = prefs.getString('words_view_mode') ?? 'grid3';
+  
+  void _loadViewModeSync() {
+    // Set default immediately
+    _viewMode = ViewMode.grid3;
     
-    setState(() {
-      switch (savedViewMode) {
-        case 'list':
-          _viewMode = ViewMode.list;
-          break;
-        case 'grid3':
-          _viewMode = ViewMode.grid3;
-          break;
-        case 'grid4':
-          _viewMode = ViewMode.grid4;
-          break;
-        default:
-          _viewMode = ViewMode.grid3;
+    // Then load from preferences asynchronously
+    _loadViewModeAsync();
+  }
+  
+  Future<void> _loadViewModeAsync() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 100)); // Small delay to ensure UI is ready
+      
+      String? savedViewMode;
+      
+      // Try SharedPreferences first
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final keys = prefs.getKeys();
+        print('All SharedPreferences keys: $keys');
+        savedViewMode = prefs.getString('words_view_mode');
+        print('SharedPreferences view mode: $savedViewMode');
+      } catch (e) {
+        print('SharedPreferences failed: $e');
       }
-    });
+      
+      // If SharedPreferences failed or returned null, try file storage
+      if (savedViewMode == null) {
+        savedViewMode = await _loadViewModeFromFile();
+        print('File storage view mode: $savedViewMode');
+        
+        // If we got a value from file, save it back to SharedPreferences
+        if (savedViewMode != null) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('words_view_mode', savedViewMode);
+            print('Restored SharedPreferences from file');
+          } catch (e) {
+            print('Failed to restore SharedPreferences: $e');
+          }
+        }
+      }
+      
+      if (savedViewMode != null && mounted) {
+        final newMode = _parseViewMode(savedViewMode);
+        setState(() {
+          _viewMode = newMode;
+        });
+        print('Successfully restored view mode: $savedViewMode -> $newMode');
+      } else {
+        print('No saved view mode found or widget not mounted');
+      }
+    } catch (e) {
+      print('Error loading view mode: $e');
+    }
   }
 
   Future<void> _saveViewMode(ViewMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    String modeString;
+    try {
+      print('Attempting to save view mode: $mode');
+      
+      final modeString = _viewModeToString(mode);
+      
+      // Save to both SharedPreferences and file
+      bool sharedPrefsSuccess = false;
+      bool fileSuccess = false;
+      
+      // Try SharedPreferences
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('words_view_mode');
+        final success = await prefs.setString('words_view_mode', modeString);
+        await prefs.commit();
+        
+        final verification = prefs.getString('words_view_mode');
+        print('SharedPreferences - Success: $success, Verified: $verification');
+        sharedPrefsSuccess = success && verification == modeString;
+      } catch (e) {
+        print('SharedPreferences save failed: $e');
+      }
+      
+      // Try file storage
+      try {
+        await _saveViewModeToFile(mode);
+        final verification = await _loadViewModeFromFile();
+        print('File storage - Verified: $verification');
+        fileSuccess = verification == modeString;
+      } catch (e) {
+        print('File storage save failed: $e');
+      }
+      
+      print('Save results - SharedPrefs: $sharedPrefsSuccess, File: $fileSuccess');
+      
+    } catch (e) {
+      print('Error saving view mode: $e');
+    }
+  }
+
+  // Alternative file-based storage methods
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/view_mode.txt');
+  }
+
+  Future<void> _saveViewModeToFile(ViewMode mode) async {
+    try {
+      final file = await _localFile;
+      final modeString = _viewModeToString(mode);
+      await file.writeAsString(modeString);
+      print('Saved view mode to file: $modeString');
+    } catch (e) {
+      print('Error saving view mode to file: $e');
+    }
+  }
+
+  Future<String?> _loadViewModeFromFile() async {
+    try {
+      final file = await _localFile;
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        print('Loaded view mode from file: $contents');
+        return contents;
+      }
+      return null;
+    } catch (e) {
+      print('Error loading view mode from file: $e');
+      return null;
+    }
+  }
+
+  // Safe ViewMode conversion with fallback
+  ViewMode _parseViewMode(String? modeString) {
+    if (modeString == null) return ViewMode.grid3;
+    
+    switch (modeString.toLowerCase().trim()) {
+      case 'list':
+        return ViewMode.list;
+      case 'grid3':
+        return ViewMode.grid3;
+      case 'grid4':
+        return ViewMode.grid4;
+      default:
+        print('Unknown view mode: $modeString, using default grid3');
+        return ViewMode.grid3;
+    }
+  }
+  
+  String _viewModeToString(ViewMode mode) {
     switch (mode) {
       case ViewMode.list:
-        modeString = 'list';
-        break;
+        return 'list';
       case ViewMode.grid3:
-        modeString = 'grid3';
-        break;
+        return 'grid3';
       case ViewMode.grid4:
-        modeString = 'grid4';
-        break;
+        return 'grid4';
     }
-    await prefs.setString('words_view_mode', modeString);
+  }
+
+  // Test function to check SharedPreferences
+  Future<void> _testSharedPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentValue = prefs.getString('words_view_mode');
+      final allKeys = prefs.getKeys();
+      final fileValue = await _loadViewModeFromFile();
+      
+      print('=== STORAGE TEST ===');
+      print('All SharedPreferences keys: $allKeys');
+      print('SharedPreferences value: $currentValue');
+      print('File storage value: $fileValue');
+      print('Current _viewMode: $_viewMode');
+      print('ViewMode enum values: ${ViewMode.values}');
+      
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Storage Test'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('SharedPrefs: ${currentValue ?? "null"}'),
+                Text('File Storage: ${fileValue ?? "null"}'),
+                Text('Current: $_viewMode'),
+                Text('All keys: ${allKeys.length}'),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await prefs.clear();
+                          Navigator.pop(context);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('SharedPreferences cleared!')),
+                            );
+                          }
+                        },
+                        child: const Text('Clear Prefs'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final file = await _localFile;
+                          if (await file.exists()) {
+                            await file.delete();
+                          }
+                          Navigator.pop(context);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('File storage cleared!')),
+                            );
+                          }
+                        },
+                        child: const Text('Clear File'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print('Test error: $e');
+    }
   }
 
   @override
@@ -94,9 +302,24 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
             selectedCategory: _selectedCategory,
             onSearchPressed: _showSearchDialog,
             onAddPressed: _tabController.index == 0 ? _showAddWordDialog : _showCreateListDialog,
-            onViewModeChanged: (mode) {
+            onViewModeChanged: (mode) async {
+              print('View mode changed to: $mode');
               setState(() => _viewMode = mode);
-              _saveViewMode(mode);
+              await _saveViewMode(mode);
+              
+              // Test to show current state
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('View mode changed to: ${mode.toString().split('.').last}'),
+                    duration: const Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: 'Test',
+                      onPressed: _testSharedPrefs,
+                    ),
+                  ),
+                );
+              }
             },
             onCategoryChanged: (category) => setState(() => _selectedCategory = category),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import '../services/firestore_service.dart';
+import '../services/version_check_service.dart';
 import '../components/dashboard/dashboard_home.dart';
 import '../components/dashboard/dashboard_quick_add_dialog.dart';
 import 'words_lists_combined_screen.dart';
@@ -23,6 +24,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     // Record login history when dashboard loads
     _firestoreService.recordLoginHistory();
+    
+    // Version kontrolü yap (async olarak)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+  
+  Future<void> _checkForUpdates() async {
+    try {
+      await VersionCheckService.checkForUpdates(context);
+    } catch (e) {
+      print('Version check failed: $e');
+    }
   }
 
   @override

@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/settings_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -59,6 +60,12 @@ class WordLuneApp extends StatelessWidget {
           return MaterialApp(
             title: 'WordLune',
             debugShowCheckedModeBanner: false,
+            routes: {
+              '/login': (context) => LoginScreen(onRegisterTap: () => Navigator.pushReplacementNamed(context, '/register')),
+              '/register': (context) => RegisterScreen(onLoginTap: () => Navigator.pushReplacementNamed(context, '/login')),
+              '/dashboard': (context) => const DashboardScreen(),
+              '/settings': (context) => const SettingsScreen(),
+            },
             theme: ThemeData(
               useMaterial3: true,
               colorScheme: ColorScheme.light(

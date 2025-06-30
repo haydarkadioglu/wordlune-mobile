@@ -175,10 +175,36 @@ class _SmartAddWordDialogState extends State<SmartAddWordDialog> {
       final translation = await TranslationService.translateToTurkish(word);
       if (mounted) {
         _meaningController.text = translation;
+        
+        // Show translation status
+        final status = TranslationService.translationStatus;
+        _showSnackBar('Çeviri tamamlandı ($status)', Colors.green);
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Translation failed: $e', Colors.red);
+        _showSnackBar('Çeviri başarısız: ${e.toString().replaceAll('Exception: ', '')}', Colors.red);
+        
+        // Provide manual input option
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Çeviri Hatası'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Otomatik çeviri yapılamadı. Lütfen anlamı manuel olarak girin.'),
+                const SizedBox(height: 16),
+                Text('Kelime: $word', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Tamam'),
+              ),
+            ],
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -239,10 +265,42 @@ class _SmartAddWordDialogState extends State<SmartAddWordDialog> {
       if (mounted) {
         _meaningController.text = translation;
         _exampleController.text = example;
+        
+        // Show success with service status
+        final status = TranslationService.translationStatus;
+        _showSnackBar('Tüm detaylar hazırlandı ($status)', Colors.green);
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('AI processing failed: $e', Colors.red);
+        final errorMsg = e.toString().replaceAll('Exception: ', '');
+        _showSnackBar('AI işleme hatası: $errorMsg', Colors.red);
+        
+        // Show helper dialog for manual input
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Otomatik İşleme Hatası'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Otomatik çeviri ve örnek cümle oluşturulamadı.'),
+                const SizedBox(height: 10),
+                const Text('Lütfen anlamı ve örnek cümleyi manuel olarak girin.'),
+                const SizedBox(height: 16),
+                Text('Kelime: $word', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text('Çeviri Servisi: ${TranslationService.translationStatus}', 
+                     style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Tamam'),
+              ),
+            ],
+          ),
+        );
       }
     } finally {
       if (mounted) {

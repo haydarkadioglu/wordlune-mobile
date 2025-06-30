@@ -272,13 +272,38 @@ class _AddWordDialogState extends State<AddWordDialog> {
         _meaningController.text = translation;
         _isTranslating = false;
       });
+      
+      // Show translation status
+      if (mounted) {
+        final status = TranslationService.translationStatus;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Çeviri tamamlandı ($status)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         _isTranslating = false;
       });
       if (mounted) {
+        final errorMsg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Translation error: $e')),
+          SnackBar(
+            content: Text('Çeviri hatası: $errorMsg'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Manuel Gir',
+              textColor: Colors.white,
+              onPressed: () {
+                // Focus on meaning field for manual input
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+            ),
+          ),
         );
       }
     }
@@ -349,14 +374,61 @@ class _AddWordDialogState extends State<AddWordDialog> {
         _isTranslating = false;
         _isGeneratingExample = false;
       });
+      
+      // Show success message with service status
+      if (mounted) {
+        final status = TranslationService.translationStatus;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tüm detaylar hazırlandı ($status)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         _isTranslating = false;
         _isGeneratingExample = false;
       });
       if (mounted) {
+        final errorMsg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching word details: $e')),
+          SnackBar(
+            content: Text('Otomatik doldurma hatası: $errorMsg'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Manuel Devam Et',
+              textColor: Colors.white,
+              onPressed: () {
+                // Show info about manual input
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Manuel Giriş'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Otomatik doldurma başarısız oldu.'),
+                        const SizedBox(height: 10),
+                        const Text('Anlam ve örnek cümle alanlarını manuel olarak doldurun.'),
+                        const SizedBox(height: 16),
+                        Text('Çeviri Servisi: ${TranslationService.translationStatus}', 
+                             style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Tamam'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         );
       }
     }
