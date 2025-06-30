@@ -687,4 +687,22 @@ class FirestoreService {
     // Commit the batch
     await batch.commit();
   }
+
+  // Update word
+  Future<void> updateWordDetails(String wordId, {
+    String? text,
+    String? meaning,
+    String? example,
+    String? category,
+  }) async {
+    if (_user == null) throw Exception('User not authenticated');
+    
+    final Map<String, dynamic> updateData = {};
+    if (text != null) updateData['text'] = text;
+    if (meaning != null) updateData['meaning'] = meaning;
+    if (example != null) updateData['example'] = example;
+    if (category != null) updateData['category'] = category;
+    
+    await _userWordsCollection.doc(wordId).update(updateData);
+  }
 }

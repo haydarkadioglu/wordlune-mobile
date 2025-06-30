@@ -38,46 +38,61 @@ class _TranslatorScreenState extends State<TranslatorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            const SizedBox(height: 8),
-            _buildHeader(),
-            const SizedBox(height: 16),
-            _buildLanguageSelector(),
-            const SizedBox(height: 16),
-            _buildInputSection(),
-            const SizedBox(height: 16),
-            if (_showResult) ...[
-              _buildResultSection(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
               const SizedBox(height: 16),
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildLanguageSelector(),
+              const SizedBox(height: 20),
+              _buildInputSection(),
+              const SizedBox(height: 20),
+              if (_showResult) ...[
+                _buildResultSection(),
+                const SizedBox(height: 20),
+              ],
+              _buildActionButtons(),
+              const SizedBox(height: 20), // Extra bottom padding for safe area
             ],
-            _buildActionButtons(),
-            const SizedBox(height: 20), // Extra bottom padding for safe area
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            'Quick Translator',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Quick Translator',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.swap_horiz),
-          onPressed: _swapLanguages,
-          tooltip: 'Swap languages',
-        ),
-      ],
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.swap_horiz,
+                color: Theme.of(context).primaryColor,
+              ),
+              onPressed: _swapLanguages,
+              tooltip: 'Swap languages',
+            ),
+          ),
+        ],
+      ),
     );
   }
 
