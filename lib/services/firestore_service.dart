@@ -31,9 +31,9 @@ class FirestoreService {
   }
 
   // Get AI details using Gemini service
-  Future<Map<String, String>> getAIDetails(String word) async {
+  Future<Map<String, String>> getAIDetails(String word, {String sourceLanguage = 'English'}) async {
     try {
-      final details = await _geminiService.getWordDetails(word);
+      final details = await _geminiService.getWordDetails(word, sourceLanguage: sourceLanguage);
       final translation = details['translation'] ?? 'Çeviri bulunamadı';
       final example = details['example'] ?? 'Örnek cümle bulunamadı';
       
@@ -54,10 +54,10 @@ class FirestoreService {
   }
 
   // Add a word to user's main words collection
-  Future<void> addWord(String word, {String category = 'Good'}) async {
+  Future<void> addWord(String word, {String category = 'Good', String sourceLanguage = 'English'}) async {
     if (_user == null) throw Exception('User not authenticated');
     
-    final ai = await getAIDetails(word);
+    final ai = await getAIDetails(word, sourceLanguage: sourceLanguage);
     await _userWordsCollection.add({
       'text': word,
       'meaning': ai['meaning'],

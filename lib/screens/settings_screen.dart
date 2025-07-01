@@ -46,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ayarlar'),
+        title: const Text('Settings'),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? Colors.grey[900]
             : Colors.white,
@@ -59,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Profil Bilgileri Kartı
+          // Profile Information Card
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -90,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user?.displayName ?? 'Kullanıcı',
+                              user?.displayName ?? 'User',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -116,72 +116,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 24),
           
-          // Hesap Ayarları
-          _buildSectionTitle('Hesap Ayarları'),
+          // Account Settings
+          _buildSectionTitle('Account Settings'),
           const SizedBox(height: 8),
           
           _buildSettingsCard([
             _buildSettingsItem(
               icon: Icons.person_outline,
-              title: 'İsim Değiştir',
-              subtitle: 'Profil adınızı güncelleyin',
+              title: 'Change Name',
+              subtitle: 'Update your display name',
               onTap: _showChangeNameDialog,
             ),
             _buildDivider(),
             _buildSettingsItem(
               icon: Icons.lock_outline,
-              title: 'Şifre Değiştir',
-              subtitle: 'Hesap güvenliğinizi güncelleyin',
+              title: 'Change Password',
+              subtitle: 'Update your account security',
               onTap: _showChangePasswordDialog,
             ),
           ]),
           
           const SizedBox(height: 16),
           
-          // Uygulama Hakkında
-          _buildSectionTitle('Uygulama'),
+          // App Settings
+          _buildSectionTitle('App'),
           const SizedBox(height: 8),
           
           _buildSettingsCard([
             _buildSettingsItem(
               icon: Icons.info_outline,
-              title: 'Versiyon',
+              title: 'Version',
               subtitle: 'v$_appVersion ($_buildNumber)',
               onTap: null,
             ),
             _buildDivider(),
             _buildSettingsItem(
               icon: Icons.system_update_outlined,
-              title: 'Güncellemeleri Kontrol Et',
-              subtitle: 'Yeni sürümü kontrol edin',
+              title: 'Check for Updates',
+              subtitle: 'Check for new version',
               onTap: () => VersionCheckService.checkForUpdatesManually(context),
             ),
             _buildDivider(),
             _buildSettingsItem(
               icon: Icons.contact_support_outlined,
-              title: 'İletişim',
-              subtitle: 'Destek ve geri bildirim',
+              title: 'Contact',
+              subtitle: 'Support and feedback',
               onTap: _showContactDialog,
             ),
             _buildDivider(),
             _buildSettingsItem(
               icon: Icons.privacy_tip_outlined,
-              title: 'Gizlilik Politikası',
-              subtitle: 'Verileriniz nasıl korunuyor',
+              title: 'Privacy Policy',
+              subtitle: 'How your data is protected',
               onTap: _showPrivacyPolicy,
             ),
           ]),
           
           const SizedBox(height: 24),
           
-          // Çıkış Yap Butonu
+          // Logout Button
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text(
-                'Çıkış Yap',
+                'Sign Out',
                 style: TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.w600,
@@ -205,7 +205,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[300]
+              : Theme.of(context).primaryColor,
         ),
       ),
     );
@@ -252,11 +254,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('İsim Değiştir'),
+        title: const Text('Change Name'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
-            labelText: 'Yeni İsim',
+            labelText: 'New Name',
             border: OutlineInputBorder(),
           ),
           textCapitalization: TextCapitalization.words,
@@ -264,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
@@ -279,7 +281,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {}); // Refresh UI
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('İsim başarıyla güncellendi!'),
+                        content: Text('Name updated successfully!'),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -289,7 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Hata: $e'),
+                        content: Text('Error: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -297,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               }
             },
-            child: const Text('Kaydet'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -312,7 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Şifre Değiştir'),
+        title: const Text('Change Password'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -320,7 +322,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextField(
                 controller: currentPasswordController,
                 decoration: const InputDecoration(
-                  labelText: 'Mevcut Şifre',
+                  labelText: 'Current Password',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
@@ -329,7 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextField(
                 controller: newPasswordController,
                 decoration: const InputDecoration(
-                  labelText: 'Yeni Şifre',
+                  labelText: 'New Password',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
@@ -338,7 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextField(
                 controller: confirmPasswordController,
                 decoration: const InputDecoration(
-                  labelText: 'Yeni Şifre (Tekrar)',
+                  labelText: 'Confirm New Password',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
@@ -349,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
@@ -360,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (newPassword != confirmPassword) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Yeni şifreler eşleşmiyor!'),
+                    content: Text('New passwords do not match!'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -370,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (newPassword.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Şifre en az 6 karakter olmalıdır!'),
+                    content: Text('Password must be at least 6 characters!'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -391,7 +393,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Şifre başarıyla güncellendi!'),
+                      content: Text('Password updated successfully!'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -401,14 +403,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Hata: ${e.toString()}'),
+                      content: Text('Error: ${e.toString()}'),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Güncelle'),
+            child: const Text('Update'),
           ),
         ],
       ),
@@ -419,12 +421,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('İletişim'),
+        title: const Text('Contact'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('WordLune Destek Ekibi'),
+            Text('WordLune Support Team'),
             SizedBox(height: 16),
             Row(
               children: [
@@ -443,7 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              'Sorularınız, önerileriniz veya teknik destek için bizimle iletişime geçebilirsiniz.',
+              'Feel free to contact us for questions, suggestions, or technical support.',
               style: TextStyle(fontSize: 14),
             ),
           ],
@@ -451,7 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -462,42 +464,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Gizlilik Politikası'),
+        title: const Text('Privacy Policy'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'WordLune Gizlilik Politikası',
+                'WordLune Privacy Policy',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               SizedBox(height: 16),
               Text(
-                'Veri Toplama:',
+                'Data Collection:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('• Hesap bilgileri (e-posta, isim)'),
-              Text('• Kelime ve liste verileri'),
-              Text('• Uygulama kullanım istatistikleri'),
+              Text('• Account information (email, name)'),
+              Text('• Word and list data'),
+              Text('• App usage statistics'),
               SizedBox(height: 12),
               Text(
-                'Veri Kullanımı:',
+                'Data Usage:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('• Hizmet sağlama ve geliştirme'),
-              Text('• Kullanıcı deneyimini iyileştirme'),
-              Text('• Güvenlik ve doğrulama'),
+              Text('• Service provision and improvement'),
+              Text('• Enhancing user experience'),
+              Text('• Security and authentication'),
               SizedBox(height: 12),
               Text(
-                'Veri Güvenliği:',
+                'Data Security:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text('• Tüm veriler şifrelenerek saklanır'),
-              Text('• Firebase güvenlik protokolleri'),
-              Text('• Düzenli güvenlik güncellemeleri'),
+              Text('• All data is encrypted and stored securely'),
+              Text('• Firebase security protocols'),
+              Text('• Regular security updates'),
               SizedBox(height: 16),
               Text(
-                'Verileriniz asla üçüncü taraflarla paylaşılmaz.',
+                'Your data is never shared with third parties.',
                 style: TextStyle(fontStyle: FontStyle.italic),
               ),
             ],
@@ -506,7 +508,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Anladım'),
+            child: const Text('Understood'),
           ),
         ],
       ),
@@ -517,12 +519,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Çıkış Yap'),
-        content: const Text('Hesabınızdan çıkış yapmak istediğinizden emin misiniz?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out of your account?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
@@ -537,7 +539,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Çıkış yapılırken hata: $e'),
+                      content: Text('Error signing out: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -545,7 +547,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Çıkış Yap'),
+            child: const Text('Sign Out'),
           ),
         ],
       ),
