@@ -155,8 +155,8 @@ Provide only the example sentence in $sourceLanguage, nothing else. Do not inclu
       };
     } catch (e) {
       return {
-        'translation': 'Translation error',
-        'example': 'Example sentence could not be generated',
+        'translation': 'Çeviri hatası',
+        'example': 'Örnek cümle oluşturulamadı - Gemini API gerekli',
       };
     }
   }
@@ -189,8 +189,8 @@ Provide only the example sentence in $sourceLanguage, nothing else. Do not inclu
       };
     } catch (e) {
       return {
-        'translation': 'Translation error',
-        'example': 'Example sentence could not be generated',
+        'translation': 'Çeviri hatası',
+        'example': 'Örnek cümle oluşturulamadı - Gemini API gerekli',
         'sourceLanguage': sourceLanguage,
         'targetLanguage': targetLanguage,
       };
@@ -281,8 +281,8 @@ Provide only the example sentence in $sourceLanguage, nothing else. Do not inclu
       );
     } catch (e) {
       return {
-        'translation': 'Translation error',
-        'example': 'Example sentence could not be generated',
+        'translation': 'Çeviri hatası',
+        'example': 'Örnek cümle oluşturulamadı - Gemini API gerekli',
         'sourceLanguage': sourceLanguage,
         'targetLanguage': targetLanguage,
       };

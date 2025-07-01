@@ -48,7 +48,7 @@ class FirestoreService {
       return {
         'meaning': translation,
         'pronunciationText': '/$word/',
-        'exampleSentence': 'Example sentence for $word',
+        'exampleSentence': 'Örnek cümle oluşturulamadı - Gemini API gerekli',
       };
     }
   }

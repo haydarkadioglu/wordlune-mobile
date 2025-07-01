@@ -60,7 +60,7 @@ void main() {
         expect(details['translation'], isNotEmpty);
         expect(details['example'], isNotEmpty);
         expect(details['translation'], isNot(equals('Translation error')));
-        expect(details['example'], isNot(equals('Example sentence could not be generated')));
+        expect(details['example'], isNot(equals('Örnek cümle oluşturulamadı - Gemini API gerekli')));
         expect(details['example']?.toLowerCase().contains('adventure'), isTrue);
       } else {
         print('Skipping API test - no valid Gemini API key configured');

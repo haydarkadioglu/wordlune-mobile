@@ -341,7 +341,7 @@ class _AddEditWordDialogState extends State<AddEditWordDialog> {
         );
         
         // Fallback to mock example
-        exampleController.text = 'Example sentence for "${wordController.text.trim()}" will be generated here.';
+        exampleController.text = 'Örnek cümle Gemini API ile oluşturulacak...';
       }
     }
   }
