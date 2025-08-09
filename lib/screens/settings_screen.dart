@@ -6,6 +6,7 @@ import '../services/version_check_service.dart';
 import '../services/google_auth_service.dart';
 import '../services/language_preference_service.dart';
 import '../services/migration_service.dart';
+import '../services/story_service.dart';
 import '../providers/language_provider.dart';
 import '../l10n/app_localizations.dart';
 
@@ -22,12 +23,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
   String _buildNumber = '';
   String _selectedLanguage = 'Turkish';
+  String _translationLanguage = 'Turkish';
   
   @override
   void initState() {
     super.initState();
     _loadAppInfo();
     _loadLanguagePreference();
+    _loadTranslationLanguage();
   }
   
   Future<void> _loadAppInfo() async {
@@ -54,6 +57,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
     } catch (e) {
       print('Error loading language preference: $e');
+    }
+  }
+
+  Future<void> _loadTranslationLanguage() async {
+    try {
+      final translationLanguage = await LanguagePreferenceService.getTranslationLanguage();
+      setState(() {
+        _translationLanguage = translationLanguage;
+      });
+    } catch (e) {
+      print('Error loading translation language: $e');
     }
   }
 
@@ -168,6 +182,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             _buildDivider(),
             _buildSettingsItem(
+              icon: Icons.translate,
+              title: AppLocalizations.of(context)?.translationLanguage ?? 'Translation Language',
+              subtitle: '${AppLocalizations.of(context)?.translateWordsTo ?? 'Translate words to'} $_translationLanguage',
+              onTap: _showTranslationLanguageDialog,
+            ),
+            _buildDivider(),
+            _buildSettingsItem(
               icon: Icons.sync,
               title: 'Migrate Data',
               subtitle: 'Migrate existing data to new structure',
@@ -232,6 +253,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Privacy Policy',
               subtitle: 'How your data is protected',
               onTap: _showPrivacyPolicy,
+            ),
+          ]),
+          
+          const SizedBox(height: 16),
+          
+          // Development Settings  
+          _buildSectionTitle('Development'),
+          const SizedBox(height: 8),
+          
+          _buildSettingsCard([
+            _buildSettingsItem(
+              icon: Icons.delete_sweep,
+              title: 'Delete Test Stories',
+              subtitle: 'Remove all test/example stories',
+              onTap: _deleteTestStories,
             ),
           ]),
           
@@ -582,6 +618,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showTranslationLanguageDialog() {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n?.selectTranslationLanguage ?? 'Select Translation Language'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: LanguagePreferenceService.availableLanguages.length,
+            itemBuilder: (context, index) {
+              final language = LanguagePreferenceService.availableLanguages[index];
+              return ListTile(
+                title: Text(language),
+                subtitle: Text('${l10n?.translateWordsTo ?? 'Translate words to'} $language'),
+                trailing: _translationLanguage == language 
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
+                onTap: () async {
+                  await LanguagePreferenceService.setTranslationLanguage(language);
+                  setState(() {
+                    _translationLanguage = language;
+                  });
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${l10n?.translationLanguageChanged ?? 'Translation language changed to'} $language'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n?.cancel ?? 'Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLanguageSelectionDialog() {
     showDialog(
       context: context,
@@ -853,5 +937,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _deleteTestStories() async {
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Test Stories'),
+        content: const Text(
+          'This will permanently delete all test stories created by Haydar. '
+          'This action cannot be undone. Are you sure?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Deleting test stories...')),
+        );
+
+        await StoryService().deleteTestStories();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Test stories deleted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting test stories: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

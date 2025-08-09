@@ -458,4 +458,46 @@ class StoryService {
       rethrow;
     }
   }
+
+  // Test hikayelerini sil
+  Future<void> deleteTestStories() async {
+    try {
+      // English test stories
+      final englishStories = await _getPublicStoriesCollection('english')
+          .where('authorName', isEqualTo: 'Haydar')
+          .get();
+      
+      for (var doc in englishStories.docs) {
+        await doc.reference.delete();
+        print('🗑️ Deleted English test story: ${doc.id}');
+      }
+
+      // Turkish test stories  
+      final turkishStories = await _getPublicStoriesCollection('turkish')
+          .where('authorName', isEqualTo: 'Haydar')
+          .get();
+      
+      for (var doc in turkishStories.docs) {
+        await doc.reference.delete();
+        print('🗑️ Deleted Turkish test story: ${doc.id}');
+      }
+
+      // Author stories'dan da sil
+      if (_userId != null) {
+        final authorStories = await _getAuthorStoriesCollection
+            .where('authorName', isEqualTo: 'Haydar')
+            .get();
+        
+        for (var doc in authorStories.docs) {
+          await doc.reference.delete();
+          print('🗑️ Deleted author test story: ${doc.id}');
+        }
+      }
+
+      print('✅ All test stories deleted successfully!');
+    } catch (e) {
+      print('❌ Error deleting test stories: $e');
+      rethrow;
+    }
+  }
 }

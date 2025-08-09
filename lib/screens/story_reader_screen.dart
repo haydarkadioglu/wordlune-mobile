@@ -5,6 +5,7 @@ import '../models/story.dart';
 import '../services/story_service.dart';
 import '../services/translation_service.dart';
 import '../services/language_preference_service.dart';
+import '../services/word_list_service.dart';
 
 class StoryReaderScreen extends StatefulWidget {
   final Story story;
@@ -17,6 +18,7 @@ class StoryReaderScreen extends StatefulWidget {
 
 class _StoryReaderScreenState extends State<StoryReaderScreen> {
   final StoryService _storyService = StoryService();
+  final WordListService _wordListService = WordListService();
   final ScrollController _scrollController = ScrollController();
   bool _isLiked = false;
   bool _isBookmarked = false;
@@ -37,6 +39,43 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _addWordToList(String word, String translation) async {
+    try {
+      // Get story language for the word list
+      final storyLanguage = LanguagePreferenceService.getLanguageFromCode(widget.story.language);
+      
+      // Get or create default word list for this language
+      final wordList = await _wordListService.getOrCreateDefaultWordList(storyLanguage);
+      
+      // Add word to the list
+      await _wordListService.addWordToList(
+        wordList.id, 
+        word, 
+        translation,
+        storyTitle: widget.story.title,
+      );
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ "$word" added to your word list!'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Failed to add word: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _loadTranslationLanguage() async {
@@ -245,13 +284,23 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   void _showLoadingTooltip(String word, Offset position) {
     _hideTooltip();
     
+    // Ekran sınırlarını kontrol et
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tooltipWidth = 200.0;
+    double left = position.dx - (tooltipWidth / 2);
+    
+    // Sol ve sağ kenar kontrolü
+    if (left < 16) left = 16;
+    if (left + tooltipWidth > screenWidth - 16) left = screenWidth - tooltipWidth - 16;
+    
     _tooltipOverlay = OverlayEntry(
       builder: (context) => Positioned(
-        left: position.dx - 100,
-        top: position.dy - 60,
+        left: left,
+        top: position.dy + 5, // Kelimenin hemen altında
         child: Material(
           color: Colors.transparent,
           child: Container(
+            width: tooltipWidth,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.black87,
@@ -266,6 +315,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(
                   width: 16,
@@ -296,15 +346,25 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   void _showTranslationTooltip(String originalWord, String translation, Offset position) {
     _hideTooltip();
     
+    // Ekran sınırlarını kontrol et
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tooltipWidth = 200.0;
+    double left = position.dx - (tooltipWidth / 2);
+    
+    // Sol ve sağ kenar kontrolü
+    if (left < 16) left = 16;
+    if (left + tooltipWidth > screenWidth - 16) left = screenWidth - tooltipWidth - 16;
+    
     _tooltipOverlay = OverlayEntry(
       builder: (context) => Positioned(
-        left: position.dx - 100,
-        top: position.dy - 80,
+        left: left,
+        top: position.dy + 5, // Kelimenin hemen altında
         child: Material(
           color: Colors.transparent,
           child: GestureDetector(
             onTap: _hideTooltip,
             child: Container(
+              width: tooltipWidth,
               constraints: const BoxConstraints(maxWidth: 200),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -356,14 +416,10 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           _hideTooltip();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Add to word list feature coming soon!'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
+                          // Add word to list
+                          await _addWordToList(originalWord, translation);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -411,15 +467,25 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   void _showErrorTooltip(String word, String error, Offset position) {
     _hideTooltip();
     
+    // Ekran sınırlarını kontrol et
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tooltipWidth = 200.0;
+    double left = position.dx - (tooltipWidth / 2);
+    
+    // Sol ve sağ kenar kontrolü
+    if (left < 16) left = 16;
+    if (left + tooltipWidth > screenWidth - 16) left = screenWidth - tooltipWidth - 16;
+    
     _tooltipOverlay = OverlayEntry(
       builder: (context) => Positioned(
-        left: position.dx - 100,
-        top: position.dy - 60,
+        left: left,
+        top: position.dy + 5, // Kelimenin hemen altında
         child: Material(
           color: Colors.transparent,
           child: GestureDetector(
             onTap: _hideTooltip,
             child: Container(
+              width: tooltipWidth,
               constraints: const BoxConstraints(maxWidth: 200),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -474,59 +540,102 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
   }
 
   Widget _buildClickableText(String content) {
-    final words = content.split(RegExp(r'(\s+|[.,!?;:()"' + r"'" + r'\[\]{}<>])'));
     final spans = <InlineSpan>[];
     
-    for (int i = 0; i < words.length; i++) {
-      final word = words[i];
+    // Paragrafları ayır
+    final paragraphs = content.split('\n');
+    
+    for (int paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
+      final paragraph = paragraphs[paragraphIndex];
       
-      if (RegExp(r'^[a-zA-ZüğıöşÜĞIÖŞçÇ]+$').hasMatch(word) && word.length > 2) {
-        // Clickable word
-        spans.add(
-          WidgetSpan(
-            child: GestureDetector(
-              onTapDown: (details) {
-                final renderBox = context.findRenderObject() as RenderBox;
-                final globalPosition = renderBox.localToGlobal(details.localPosition);
-                _translateWord(word, globalPosition);
-              },
-              child: Text(
-                word,
-                style: TextStyle(
-                  fontSize: _fontSize,
-                  height: 1.6,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.blue[300]
-                      : Colors.blue[700],
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.blue.withOpacity(0.4),
-                  decorationStyle: TextDecorationStyle.dotted,
-                  fontWeight: FontWeight.w500,
+      if (paragraph.trim().isEmpty) {
+        // Boş paragraf için satır boşluğu ekle
+        spans.add(const TextSpan(text: '\n\n'));
+        continue;
+      }
+      
+      // Kelime ve boşlukları koruyarak ayır
+      final regex = RegExp(r'(\s+|[a-zA-ZüğıöşÜĞIÖŞçÇ]+|[^\s\w])');
+      final matches = regex.allMatches(paragraph);
+      
+      for (final match in matches) {
+        final word = match.group(0)!;
+        
+        if (RegExp(r'^[a-zA-ZüğıöşÜĞIÖŞçÇ]+$').hasMatch(word) && word.length > 2) {
+          // Clickable word
+          spans.add(
+            WidgetSpan(
+              child: Builder(
+                builder: (context) => Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTapDown: (details) {
+                      // Widget'ın pozisyonunu al
+                      final RenderBox renderBox = context.findRenderObject() as RenderBox;
+                      final Offset localPosition = details.localPosition;
+                      final Offset globalPosition = renderBox.localToGlobal(localPosition);
+                      
+                      // Tooltip'i kelimenin hemen altında göster
+                      final Offset tooltipPosition = Offset(
+                        globalPosition.dx,
+                        globalPosition.dy + 25, // Kelimenin altında
+                      );
+                      
+                      _translateWord(word, tooltipPosition);
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    splashColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue[400]!.withOpacity(0.2)
+                        : Colors.blue[600]!.withOpacity(0.1),
+                    highlightColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue[400]!.withOpacity(0.1)
+                        : Colors.blue[600]!.withOpacity(0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+                      child: Text(
+                        word,
+                        style: TextStyle(
+                          fontSize: _fontSize,
+                          height: 1.6,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[200]
+                              : Colors.grey[800],
+                          // Sade görünüm, sadece tıklanınca efekt
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      } else {
-        // Non-clickable text (spaces, punctuation, etc.)
-        spans.add(
-          TextSpan(
-            text: word,
-            style: TextStyle(
-              fontSize: _fontSize,
-              height: 1.6,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white70
-                  : Colors.black87,
+          );
+        } else {
+          // Non-clickable text (spaces, punctuation, etc.)
+          spans.add(
+            TextSpan(
+              text: word,
+              style: TextStyle(
+                fontSize: _fontSize,
+                height: 1.6, // Clickable kelimelerle aynı satır yüksekliği
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[200]
+                    : Colors.grey[800],
+              ),
             ),
-          ),
-        );
+          );
+        }
+      }
+      
+      // Paragraf sonunda satır sonu ekle (son paragraf hariç)
+      if (paragraphIndex < paragraphs.length - 1) {
+        spans.add(const TextSpan(text: '\n\n'));
       }
     }
     
     return RichText(
       text: TextSpan(children: spans),
       textAlign: TextAlign.justify,
+      textScaleFactor: 1.0, // Sabit boyut için
     );
   }
 
@@ -549,7 +658,7 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
               pinned: true,
               backgroundColor: Theme.of(context).brightness == Brightness.dark
                   ? Colors.grey[900]
-                  : Colors.blue,
+                  : const Color(0xFF4FC3F7),
               foregroundColor: Colors.white,
               title: Text(
                 widget.story.title,
@@ -575,9 +684,13 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                     bottom: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[850]
-                        : Colors.grey[50],
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: Theme.of(context).brightness == Brightness.dark
+                          ? [Colors.grey[850]!, Colors.grey[800]!]
+                          : [const Color(0xFF4FC3F7), const Color(0xFF64B5F6)],
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,6 +792,45 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                       ),
                     ],
                   ),
+                  // Translation tip
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blue[900]!.withOpacity(0.2)
+                          : Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.blue[800]!.withOpacity(0.3)
+                            : Colors.blue[200]!.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.touch_app,
+                          size: 14,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.blue[300]
+                              : Colors.blue[700],
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Tap any word to translate',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.blue[300]
+                                : Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (widget.story.tags.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Wrap(
@@ -687,8 +839,18 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                       children: widget.story.tags
                           .map((tag) => Chip(
                                 label: Text(tag),
-                                backgroundColor: Colors.blue[50],
-                                labelStyle: const TextStyle(fontSize: 12),
+                                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[800]?.withOpacity(0.8)
+                                    : Colors.blue[50],
+                                labelStyle: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[300]
+                                      : Colors.blue[700],
+                                ),
+                                side: Theme.of(context).brightness == Brightness.dark
+                                    ? BorderSide(color: Colors.grey[600]!, width: 0.5)
+                                    : null,
                               ))
                           .toList(),
                     ),
@@ -715,13 +877,20 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.grey[800]
-                              : Colors.grey[100],
+                              : Colors.grey[50],
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[600]!
+                                : Colors.grey[200]!,
+                          ),
                         ),
-                        child: const Text(
+                        child: Text(
                           '📖 End of Story',
                           style: TextStyle(
-                            color: Colors.grey,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
                             fontStyle: FontStyle.italic,
                           ),
                         ),

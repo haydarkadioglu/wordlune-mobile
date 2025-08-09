@@ -27,6 +27,12 @@ class AppLocalizations {
   String get appLanguageChangedToEnglish => 'App language changed to English';
   String get appLanguageChangedToTurkish => 'Uygulama dili Türkçe olarak değiştirildi';
   
+  // Translation language settings
+  String get translationLanguage => locale.languageCode == 'tr' ? 'Çeviri Dili' : 'Translation Language';
+  String get selectTranslationLanguage => locale.languageCode == 'tr' ? 'Çeviri Dilini Seç' : 'Select Translation Language';
+  String get translateWordsTo => locale.languageCode == 'tr' ? 'Kelimeleri şu dile çevir:' : 'Translate words to:';
+  String get translationLanguageChanged => locale.languageCode == 'tr' ? 'Çeviri dili değiştirildi:' : 'Translation language changed to:';
+  
   // Dashboard translations
   String get dashboard => locale.languageCode == 'tr' ? 'Ana Sayfa' : 'Dashboard';
   String get stories => locale.languageCode == 'tr' ? 'Hikayeler' : 'Stories';

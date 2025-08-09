@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/story_service.dart';
 import '../services/language_preference_service.dart';
-import '../services/test_data_service.dart';
 import 'story_reader_screen.dart';
 
 class StoriesScreen extends StatefulWidget {
@@ -173,25 +172,6 @@ class _StoriesScreenState extends State<StoriesScreen> with TickerProviderStateM
                         'Be the first to publish a story!',
                         style: TextStyle(color: Colors.grey),
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Creating test stories...')),
-                          );
-                          await TestDataService.createTestStory();
-                          await TestDataService.createTurkishTestStory();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Test stories created!')),
-                          );
-                        },
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Create Test Stories'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
                     ],
                   ),
                 );
@@ -265,15 +245,6 @@ class _StoriesScreenState extends State<StoriesScreen> with TickerProviderStateM
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Create Story'),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: _fixAuthorStories,
-                  icon: const Icon(Icons.build, color: Colors.white),
-                  label: const Text('Fix My Stories', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                  ),
                 ),
               ],
             ),
@@ -636,26 +607,5 @@ class _StoriesScreenState extends State<StoriesScreen> with TickerProviderStateM
         ],
       ),
     );
-  }
-
-  Future<void> _fixAuthorStories() async {
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fixing author stories data...')),
-      );
-
-      await _storyService.fixAuthorStoriesData();
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Author stories fixed! Your stories should now appear.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fixing stories: $e')),
-      );
-    }
   }
 }
