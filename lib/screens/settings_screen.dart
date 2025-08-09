@@ -7,7 +7,7 @@ import '../services/google_auth_service.dart';
 import '../services/language_preference_service.dart';
 import '../services/migration_service.dart';
 import '../providers/language_provider.dart';
-import '../generated/l10n/app_localizations.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(AppLocalizations.of(context)?.settings ?? 'Settings'),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? Colors.grey[900]
             : Colors.white,
@@ -156,13 +156,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           
           // Learning Language Settings
-          _buildSectionTitle('Learning Language'),
+          _buildSectionTitle(AppLocalizations.of(context)?.learningLanguage ?? 'Learning Language'),
           const SizedBox(height: 8),
           
           _buildSettingsCard([
             _buildSettingsItem(
               icon: Icons.language,
-              title: 'Selected Language',
+              title: AppLocalizations.of(context)?.selectedLanguage ?? 'Selected Language',
               subtitle: _selectedLanguage,
               onTap: _showLanguageSelectionDialog,
             ),
@@ -185,14 +185,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           
           // Interface Language Settings
-          _buildSectionTitle('Interface Language'),
+          _buildSectionTitle(AppLocalizations.of(context)?.interfaceLanguage ?? 'Interface Language'),
           const SizedBox(height: 8),
           
           _buildSettingsCard([
             _buildSettingsItem(
               icon: Icons.translate,
-              title: 'App Language',
-              subtitle: context.watch<LanguageProvider>().isEnglish ? 'English' : 'Türkçe',
+              title: AppLocalizations.of(context)?.appLanguage ?? 'App Language',
+              subtitle: context.watch<LanguageProvider>().isEnglish 
+                  ? (AppLocalizations.of(context)?.english ?? 'English')
+                  : (AppLocalizations.of(context)?.turkish ?? 'Türkçe'),
               onTap: _showInterfaceLanguageDialog,
             ),
           ]),
@@ -522,15 +524,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
   
   void _showInterfaceLanguageDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select App Language'),
+        title: Text(l10n?.selectAppLanguage ?? 'Select App Language'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('English'),
+              title: Text(l10n?.english ?? 'English'),
               trailing: context.watch<LanguageProvider>().isEnglish 
                   ? const Icon(Icons.check, color: Colors.green)
                   : null,
@@ -540,8 +543,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('App language changed to English'),
+                    SnackBar(
+                      content: Text(l10n?.appLanguageChangedToEnglish ?? 'App language changed to English'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -549,7 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             ListTile(
-              title: const Text('Türkçe'),
+              title: Text(l10n?.turkish ?? 'Türkçe'),
               trailing: context.watch<LanguageProvider>().isTurkish 
                   ? const Icon(Icons.check, color: Colors.green)
                   : null,
@@ -559,8 +562,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Uygulama dili Türkçe olarak değiştirildi'),
+                    SnackBar(
+                      content: Text(l10n?.appLanguageChangedToTurkish ?? 'Uygulama dili Türkçe olarak değiştirildi'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -572,7 +575,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n?.cancel ?? 'Cancel'),
           ),
         ],
       ),

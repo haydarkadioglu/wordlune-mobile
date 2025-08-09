@@ -11,7 +11,7 @@ import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/settings_screen.dart';
 import 'providers/language_provider.dart';
-// import 'generated/l10n/app_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -109,7 +109,7 @@ class WordLuneApp extends StatelessWidget {
             ),
             themeMode: themeProvider.themeMode,
             localizationsDelegates: const [
-              // AppLocalizations.delegate,
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

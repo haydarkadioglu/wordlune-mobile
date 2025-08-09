@@ -7,7 +7,7 @@ import '../components/dashboard/dashboard_quick_add_dialog.dart';
 import 'words_lists_combined_screen.dart';
 import 'translator_screen.dart';
 import 'stories_screen.dart';
-import '../generated/l10n/app_localizations.dart';
+// import '../generated/l10n/app_localizations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
