@@ -171,10 +171,10 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
     );
   }
 
-  void _showEditListDialog() {
+  void _showEditListDialog() async {
     final nameController = TextEditingController(text: widget.wordList.name);
     final descriptionController = TextEditingController(text: widget.wordList.description);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -185,16 +185,16 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+                labelText: 'List Name',
+                hintText: 'Enter list name',
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Description (Optional)',
-                border: OutlineInputBorder(),
+                labelText: 'Description',
+                hintText: 'Enter description (optional)',
               ),
               maxLines: 3,
             ),
@@ -205,26 +205,22 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () async {
               if (nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Name is required')),
+                  const SnackBar(content: Text('Please enter a list name')),
                 );
                 return;
               }
-              
-              final updatedList = WordList(
-                id: widget.wordList.id,
-                name: nameController.text.trim(),
-                description: descriptionController.text.trim(),
-                wordCount: widget.wordList.wordCount,
-                createdAt: widget.wordList.createdAt,
-                userId: widget.wordList.userId,
-              );
-              
+
               try {
-                await _firestoreService.updateWordList(updatedList);
+                await _firestoreService.updateWordList(
+                  widget.wordList.id,
+                  nameController.text.trim(),
+                  descriptionController.text.trim(),
+                );
+
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -239,7 +235,7 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
                 }
               }
             },
-            child: const Text('Update'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -260,67 +256,25 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () async {
               try {
                 await _firestoreService.deleteWordList(widget.wordList.id);
                 if (context.mounted) {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Go back to lists screen
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('List deleted successfully')),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error deleting list: $e')),
                   );
                 }
               }
             },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSearchDialog() {
-    final searchController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search Words'),
-        content: TextField(
-          controller: searchController,
-          decoration: const InputDecoration(
-            hintText: 'Enter search term',
-            prefixIcon: Icon(Icons.search),
-          ),
-          autofocus: true,
-          onSubmitted: (value) {
-            setState(() {
-              _searchQuery = value.trim().toLowerCase();
-            });
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _searchQuery = searchController.text.trim().toLowerCase();
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Search'),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -333,6 +287,45 @@ class _WordListDetailsScreenState extends State<WordListDetailsScreen> {
       builder: (context) => BulkAddDialog(
         listId: widget.wordList.id,
         firestoreService: _firestoreService,
+      ),
+    );
+  }
+
+  void _showSearchDialog() {
+    final searchController = TextEditingController(text: _searchQuery);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Words'),
+        content: TextField(
+          controller: searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter search term...',
+            prefixIcon: Icon(Icons.search),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.trim().toLowerCase();
+            });
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _searchQuery = searchController.text.trim().toLowerCase();
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Search'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

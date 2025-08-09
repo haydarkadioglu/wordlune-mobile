@@ -33,7 +33,7 @@ class _AddEditWordDialogState extends State<AddEditWordDialog> {
     super.initState();
     wordController = TextEditingController(text: widget.existingWord?.word ?? '');
     meaningController = TextEditingController(text: widget.existingWord?.meaning ?? '');
-    exampleController = TextEditingController(text: widget.existingWord?.example ?? '');
+    exampleController = TextEditingController(text: widget.existingWord?.exampleSentence ?? '');
     selectedLanguage = widget.existingWord?.language ?? 'Turkish';
   }
 
@@ -195,21 +195,33 @@ class _AddEditWordDialogState extends State<AddEditWordDialog> {
     
     try {
       if (isEditing) {
-        await widget.firestoreService.updateListWord(
-          listId: widget.listId,
-          wordId: widget.existingWord!.id,
+        final updatedWord = ListWord(
+          id: widget.existingWord!.id,
           word: wordController.text.trim(),
           meaning: meaningController.text.trim(),
-          example: exampleController.text.trim(),
+          exampleSentence: exampleController.text.trim(),
+          createdAt: widget.existingWord!.createdAt,
           language: selectedLanguage,
         );
+        
+        await widget.firestoreService.updateWordInList(
+          widget.listId,
+          widget.existingWord!.id,
+          updatedWord,
+        );
       } else {
-        await widget.firestoreService.addWordToList(
-          listId: widget.listId,
+        final newWord = ListWord(
+          id: '',
           word: wordController.text.trim(),
           meaning: meaningController.text.trim(),
-          example: exampleController.text.trim(),
+          exampleSentence: exampleController.text.trim(),
+          createdAt: DateTime.now(),
           language: selectedLanguage,
+        );
+        
+        await widget.firestoreService.addWordToList(
+          widget.listId,
+          newWord,
         );
       }
       
@@ -271,24 +283,21 @@ class _AddEditWordDialogState extends State<AddEditWordDialog> {
           ),
         );
       }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('AI explanation error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        
-        // Fallback to mock explanation
-        final mockExplanation = _getMockAIExplanation(wordController.text.trim());
-        meaningController.text = mockExplanation;
+      } catch (e) {
+        if (context.mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI explanation error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          
+          // Fallback to basic message
+          meaningController.text = 'Translation requires Gemini API';
+        }
       }
-    }
-  }
-
-  Future<void> _generateExample() async {
+    }  Future<void> _generateExample() async {
     if (wordController.text.trim().isEmpty || meaningController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter word and meaning first')),
@@ -340,32 +349,9 @@ class _AddEditWordDialogState extends State<AddEditWordDialog> {
           ),
         );
         
-        // Fallback to mock example
+        // Fallback to basic message
         exampleController.text = 'Örnek cümle Gemini API ile oluşturulacak...';
       }
     }
-  }
-
-  String _getMockTranslation(String word) {
-    // Mock translations - replace with actual translation service
-    final translations = {
-      'hello': 'merhaba',
-      'world': 'dünya',
-      'book': 'kitap',
-      'house': 'ev',
-      'water': 'su',
-      'food': 'yemek',
-      'love': 'aşk',
-      'beautiful': 'güzel',
-      'computer': 'bilgisayar',
-      'phone': 'telefon',
-    };
-    
-    return translations[word.toLowerCase()] ?? 'Translation not found';
-  }
-
-  String _getMockAIExplanation(String word) {
-    // Mock AI explanations - replace with actual AI service
-    return 'AI-generated explanation for "$word": This is a detailed explanation of the word, its usage, context, and examples.';
   }
 }

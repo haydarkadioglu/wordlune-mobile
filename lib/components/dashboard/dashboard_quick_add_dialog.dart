@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/firestore_service.dart';
+import '../../models/word.dart';
 
 class DashboardQuickAddDialog extends StatefulWidget {
   final FirestoreService firestoreService;
@@ -88,10 +89,18 @@ class _DashboardQuickAddDialogState extends State<DashboardQuickAddDialog> {
     setState(() => _isLoading = true);
     
     try {
-      await widget.firestoreService.addWord(
-        _wordController.text.trim(),
+      final word = Word(
+        id: '',
+        text: _wordController.text.trim(),
+        meaning: '',
+        pronunciationText: '',
+        exampleSentence: '',
         category: _selectedCategory,
+        dateAdded: DateTime.now(),
+        language: 'Turkish',
       );
+      
+      await widget.firestoreService.addWord(word);
       
       if (mounted) {
         Navigator.pop(context);

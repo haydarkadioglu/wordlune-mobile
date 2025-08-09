@@ -76,12 +76,12 @@ class ListWordCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (word.example.isNotEmpty) ...[
+            if (word.exampleSentence.isNotEmpty) ...[
               const Divider(height: 16),
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  word.example,
+                  word.exampleSentence,
                   style: const TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 12,

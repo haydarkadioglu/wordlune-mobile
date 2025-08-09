@@ -527,11 +527,12 @@ class _AddToCollectionDialogState extends State<AddToCollectionDialog> {
 
     try {
       await widget.firestoreService.addWordWithDetails(
-        word: widget.word,
-        translation: widget.translation,
-        ipa: '',
-        example: '',
-        category: _selectedCategory,
+        widget.word,
+        widget.translation,
+        '',
+        _selectedCategory,
+        '',
+        _selectedCategory,
         listId: _selectedList.isNotEmpty ? _selectedList : null,
       );
 

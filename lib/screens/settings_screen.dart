@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../services/firestore_service.dart';
+import 'package:provider/provider.dart';
 import '../services/version_check_service.dart';
+import '../services/google_auth_service.dart';
+import '../services/language_preference_service.dart';
+import '../services/migration_service.dart';
+import '../providers/language_provider.dart';
+import '../generated/l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,15 +18,16 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirestoreService _firestoreService = FirestoreService();
   
   String _appVersion = '';
   String _buildNumber = '';
+  String _selectedLanguage = 'Turkish';
   
   @override
   void initState() {
     super.initState();
     _loadAppInfo();
+    _loadLanguagePreference();
   }
   
   Future<void> _loadAppInfo() async {
@@ -37,6 +43,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _appVersion = '1.0.0';
         _buildNumber = '1';
       });
+    }
+  }
+
+  Future<void> _loadLanguagePreference() async {
+    try {
+      final language = await LanguagePreferenceService.getSelectedLanguage();
+      setState(() {
+        _selectedLanguage = language;
+      });
+    } catch (e) {
+      print('Error loading language preference: $e');
     }
   }
 
@@ -133,6 +150,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Change Password',
               subtitle: 'Update your account security',
               onTap: _showChangePasswordDialog,
+            ),
+          ]),
+          
+          const SizedBox(height: 16),
+          
+          // Learning Language Settings
+          _buildSectionTitle('Learning Language'),
+          const SizedBox(height: 8),
+          
+          _buildSettingsCard([
+            _buildSettingsItem(
+              icon: Icons.language,
+              title: 'Selected Language',
+              subtitle: _selectedLanguage,
+              onTap: _showLanguageSelectionDialog,
+            ),
+            _buildDivider(),
+            _buildSettingsItem(
+              icon: Icons.sync,
+              title: 'Migrate Data',
+              subtitle: 'Migrate existing data to new structure',
+              onTap: _showMigrationDialog,
+            ),
+            _buildDivider(),
+            _buildSettingsItem(
+              icon: Icons.update,
+              title: 'Update Language Tags',
+              subtitle: 'Add language tags to existing data',
+              onTap: _updateLanguageTags,
+            ),
+          ]),
+          
+          const SizedBox(height: 16),
+          
+          // Interface Language Settings
+          _buildSectionTitle('Interface Language'),
+          const SizedBox(height: 8),
+          
+          _buildSettingsCard([
+            _buildSettingsItem(
+              icon: Icons.translate,
+              title: 'App Language',
+              subtitle: context.watch<LanguageProvider>().isEnglish ? 'English' : 'Türkçe',
+              onTap: _showInterfaceLanguageDialog,
             ),
           ]),
           
@@ -460,6 +521,237 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
   
+  void _showInterfaceLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select App Language'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('English'),
+              trailing: context.watch<LanguageProvider>().isEnglish 
+                  ? const Icon(Icons.check, color: Colors.green)
+                  : null,
+              onTap: () async {
+                final provider = context.read<LanguageProvider>();
+                await provider.setLocale(const Locale('en'));
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('App language changed to English'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              title: const Text('Türkçe'),
+              trailing: context.watch<LanguageProvider>().isTurkish 
+                  ? const Icon(Icons.check, color: Colors.green)
+                  : null,
+              onTap: () async {
+                final provider = context.read<LanguageProvider>();
+                await provider.setLocale(const Locale('tr'));
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Uygulama dili Türkçe olarak değiştirildi'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Learning Language'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: LanguagePreferenceService.availableLanguages.length,
+                itemBuilder: (context, index) {
+                  final language = LanguagePreferenceService.availableLanguages[index];
+                  return ListTile(
+                    title: Text(language),
+                    trailing: languageProvider.selectedLanguage == language 
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
+                    onTap: () async {
+                      await languageProvider.setLanguage(language);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Learning language changed to $language'),
+                            backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          );
+        },
+      ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMigrationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Migrate Data'),
+        content: const Text(
+          'This will migrate your existing words and lists to the new language-based structure. '
+          'This process is irreversible. Do you want to continue?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performMigration();
+            },
+            child: const Text('Migrate'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performMigration() async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Migrating data...'),
+            ],
+          ),
+        ),
+      );
+
+      // Check if migration is needed
+      final needsMigration = await MigrationService.isMigrationNeeded();
+      
+      if (!needsMigration) {
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No data to migrate'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Perform migration
+      await MigrationService.migrateToLanguageBasedStructure();
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data migrated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Migration failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateLanguageTags() async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Updating language tags...'),
+            ],
+          ),
+        ),
+      );
+
+      // This feature is temporarily disabled
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Language tags update feature is temporarily disabled'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update language tags: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showPrivacyPolicy() {
     showDialog(
       context: context,
@@ -529,7 +821,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () async {
               try {
-                await _auth.signOut();
+                // Google ile giriş yapılmışsa Google'dan da çıkış yap
+                if (GoogleAuthService.isSignedInWithGoogle()) {
+                  await GoogleAuthService.signOut();
+                } else {
+                  await _auth.signOut();
+                }
+                
                 if (mounted) {
                   Navigator.pop(context); // Close dialog
                   Navigator.pushReplacementNamed(context, '/login');
@@ -539,7 +837,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error signing out: $e'),
+                      content: Text('Çıkış yaparken hata: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );

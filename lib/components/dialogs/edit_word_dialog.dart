@@ -251,24 +251,21 @@ class _EditWordDialogState extends State<EditWordDialog> {
           ),
         );
       }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('AI explanation error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        
-        // Fallback to mock explanation
-        final mockExplanation = _getMockAIExplanation(_wordController.text.trim());
-        _meaningController.text = mockExplanation;
+      } catch (e) {
+        if (context.mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI explanation error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          
+          // Fallback to basic message
+          _meaningController.text = 'Translation requires Gemini API';
+        }
       }
-    }
-  }
-
-  Future<void> _generateExample() async {
+    }  Future<void> _generateExample() async {
     if (_wordController.text.trim().isEmpty || _meaningController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter word and meaning first')),
@@ -320,33 +317,10 @@ class _EditWordDialogState extends State<EditWordDialog> {
           ),
         );
         
-        // Fallback to mock example
+        // Fallback to basic message
         _exampleController.text = 'Örnek cümle Gemini API ile oluşturulacak...';
       }
     }
-  }
-
-  String _getMockTranslation(String word) {
-    // Mock translations - replace with actual translation service
-    final translations = {
-      'hello': 'merhaba',
-      'world': 'dünya',
-      'book': 'kitap',
-      'house': 'ev',
-      'water': 'su',
-      'food': 'yemek',
-      'love': 'aşk',
-      'beautiful': 'güzel',
-      'computer': 'bilgisayar',
-      'phone': 'telefon',
-    };
-    
-    return translations[word.toLowerCase()] ?? 'Translation not found';
-  }
-
-  String _getMockAIExplanation(String word) {
-    // Mock AI explanations - replace with actual AI service
-    return 'AI-generated explanation for "$word": This is a detailed explanation of the word, its usage, context, and examples.';
   }
 
   Future<void> _handleSubmit() async {
@@ -362,10 +336,11 @@ class _EditWordDialogState extends State<EditWordDialog> {
     try {
       await _firestoreService.updateWordDetails(
         widget.word.id,
-        text: _wordController.text.trim(),
-        meaning: _meaningController.text.trim(),
-        example: _exampleController.text.trim().isEmpty ? null : _exampleController.text.trim(),
-        category: _selectedCategory,
+        _wordController.text.trim(),
+        _meaningController.text.trim(),
+        '', // pronunciation
+        _exampleController.text.trim().isEmpty ? '' : _exampleController.text.trim(),
+        _selectedCategory,
       );
       
       if (context.mounted) {

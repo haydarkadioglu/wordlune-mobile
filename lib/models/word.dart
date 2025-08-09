@@ -8,6 +8,7 @@ class Word {
   final String exampleSentence; // Changed from 'example' to 'exampleSentence'
   final String category; // 'Very Good', 'Good', 'Bad'
   final DateTime dateAdded; // Changed from 'dateAdded' to 'createdAt' in Firestore
+  final String language; // Added language field
 
   Word({
     required this.id,
@@ -17,7 +18,15 @@ class Word {
     required this.exampleSentence,
     required this.category,
     required this.dateAdded,
+    required this.language, // Added language parameter
   });
+
+  // Backward compatibility getters
+  String get word => text;
+  String get pronunciation => pronunciationText;
+  String get partOfSpeech => category; // Using category as part of speech
+  String get difficulty => category; // Using category as difficulty
+  String get example => exampleSentence;
 
   // Factory constructor for Firestore data
   factory Word.fromFirestore(String id, Map<String, dynamic> data) {
@@ -42,23 +51,36 @@ class Word {
       exampleSentence: data['exampleSentence'] ?? '',
       category: data['category'] ?? 'Good',
       dateAdded: createdDate,
+      language: data['language'] ?? 'Turkish', // Added language field
     );
   }
 
   // Legacy method for backward compatibility (if needed)
-  factory Word.fromMap(String id, Map<String, dynamic> data) {
+  factory Word.fromMap(Map<String, dynamic> data, String id) {
+    DateTime createdDate;
+    
+    // Handle different date formats
+    if (data['createdAt'] is Timestamp) {
+      createdDate = (data['createdAt'] as Timestamp).toDate();
+    } else if (data['dateAdded'] is Timestamp) {
+      createdDate = (data['dateAdded'] as Timestamp).toDate();
+    } else if (data['createdAt'] is int) {
+      createdDate = DateTime.fromMillisecondsSinceEpoch(data['createdAt']);
+    } else if (data['createdAt'] is String) {
+      createdDate = DateTime.tryParse(data['createdAt']) ?? DateTime.now();
+    } else {
+      createdDate = DateTime.now();
+    }
+    
     return Word(
       id: id,
       text: data['word'] ?? data['text'] ?? '',
       meaning: data['translation'] ?? data['meaning'] ?? '',
-      pronunciationText: data['ipa'] ?? data['pronunciationText'] ?? '',
+      pronunciationText: data['ipa'] ?? data['pronunciationText'] ?? data['pronunciation'] ?? '',
       exampleSentence: data['example'] ?? data['exampleSentence'] ?? '',
-      category: data['category'] ?? 'Good',
-      dateAdded: data['dateAdded'] is Timestamp 
-          ? (data['dateAdded'] as Timestamp).toDate()
-          : data['createdAt'] is Timestamp
-              ? (data['createdAt'] as Timestamp).toDate()
-              : DateTime.now(),
+      category: data['category'] ?? data['partOfSpeech'] ?? data['difficulty'] ?? 'Good',
+      dateAdded: createdDate,
+      language: data['language'] ?? 'Turkish', // Added language field
     );
   }
 
@@ -70,6 +92,7 @@ class Word {
       'pronunciationText': pronunciationText,
       'exampleSentence': exampleSentence,
       'category': category,
+      'language': language, // Added language field
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -82,15 +105,14 @@ class Word {
       'ipa': pronunciationText,
       'example': exampleSentence,
       'category': category,
+      'language': language, // Added language field
       'dateAdded': dateAdded,
     };
   }
 
   // Getter methods for backward compatibility
-  String get word => text;
   String get translation => meaning;
   String get ipa => pronunciationText;
-  String get example => exampleSentence;
 
   // Copy with method for updates
   Word copyWith({
@@ -101,6 +123,7 @@ class Word {
     String? exampleSentence,
     String? category,
     DateTime? dateAdded,
+    String? language, // Added language parameter
   }) {
     return Word(
       id: id ?? this.id,
@@ -110,6 +133,7 @@ class Word {
       exampleSentence: exampleSentence ?? this.exampleSentence,
       category: category ?? this.category,
       dateAdded: dateAdded ?? this.dateAdded,
+      language: language ?? this.language, // Added language field
     );
   }
 } 

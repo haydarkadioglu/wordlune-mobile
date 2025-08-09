@@ -229,38 +229,6 @@ Provide only the example sentence in $sourceLanguage, nothing else. Do not inclu
     }
   }
 
-  // Helper method to convert language names to language codes
-  String _getLanguageCodeFromName(String languageName) {
-    switch (languageName) {
-      case 'English':
-        return 'en';
-      case 'Turkish':
-        return 'tr';
-      case 'German':
-        return 'de';
-      case 'French':
-        return 'fr';
-      case 'Spanish':
-        return 'es';
-      case 'Italian':
-        return 'it';
-      case 'Portuguese':
-        return 'pt';
-      case 'Russian':
-        return 'ru';
-      case 'Japanese':
-        return 'ja';
-      case 'Korean':
-        return 'ko';
-      case 'Chinese':
-        return 'zh';
-      case 'Arabic':
-        return 'ar';
-      default:
-        return 'en'; // Default fallback
-    }
-  }
-
   // Auto-detect source language and get word details
   Future<Map<String, String>> getWordDetailsWithAutoDetection(
     String word, {

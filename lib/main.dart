@@ -10,6 +10,8 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/settings_screen.dart';
+import 'providers/language_provider.dart';
+// import 'generated/l10n/app_localizations.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -53,13 +55,17 @@ class WordLuneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
+      child: Consumer2<ThemeProvider, LanguageProvider>(
+        builder: (context, themeProvider, languageProvider, _) {
           return MaterialApp(
             title: 'WordLune',
             debugShowCheckedModeBanner: false,
+            locale: languageProvider.locale,
             routes: {
               '/login': (context) => LoginScreen(onRegisterTap: () => Navigator.pushReplacementNamed(context, '/register')),
               '/register': (context) => RegisterScreen(onLoginTap: () => Navigator.pushReplacementNamed(context, '/login')),
@@ -103,6 +109,7 @@ class WordLuneApp extends StatelessWidget {
             ),
             themeMode: themeProvider.themeMode,
             localizationsDelegates: const [
+              // AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

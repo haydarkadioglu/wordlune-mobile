@@ -6,6 +6,8 @@ import '../components/dashboard/dashboard_home.dart';
 import '../components/dashboard/dashboard_quick_add_dialog.dart';
 import 'words_lists_combined_screen.dart';
 import 'translator_screen.dart';
+import 'stories_screen.dart';
+import '../generated/l10n/app_localizations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -54,6 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const TranslatorScreen(),
           const WordsListsCombinedScreen(),
+          const StoriesScreen(),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
@@ -63,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(Icons.dashboard_rounded, size: 26, color: Colors.white),
           Icon(Icons.translate_rounded, size: 26, color: Colors.white),
           Icon(Icons.library_books, size: 26, color: Colors.white),
+          Icon(Icons.auto_stories, size: 26, color: Colors.white),
         ],
         color: Theme.of(context).brightness == Brightness.dark 
           ? const Color(0xFF1E1E2E)

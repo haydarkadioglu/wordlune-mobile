@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../components/auth/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onRegisterTap;
@@ -269,46 +270,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Sign in with Google button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: Implement Google Sign In
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Google Sign In coming soon!')),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black87,
-                      side: BorderSide(color: Colors.grey[300]!),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: Colors.white,
-                    ),
-                    icon: Image.asset(
-                      'assets/images/google_logo.png',
-                      height: 20,
-                      width: 20,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.g_mobiledata,
-                          size: 24,
-                          color: Colors.red,
-                        );
-                      },
-                    ),
-                    label: Text(
-                      'Sign In with Google',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
+                // Google Sign-In Button
+                GoogleSignInButton(
+                  text: 'Google ile Giriş Yap',
+                  onSuccess: () {
+                    // Başarılı giriş sonrası otomatik yönlendirme olacak
+                  },
+                  onError: (error) {
+                    setState(() {
+                      _error = error;
+                    });
+                  },
                 ),
                 const SizedBox(height: 32),
 

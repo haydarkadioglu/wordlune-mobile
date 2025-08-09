@@ -17,11 +17,6 @@ class VersionCheckService {
   /// Ana version kontrol fonksiyonu - uygulama açılışında çağrılır
   static Future<void> checkForUpdates(BuildContext context) async {
     try {
-      // Günde bir kez kontrol et
-      if (!await _shouldCheckToday()) {
-        return;
-      }
-      
       final currentVersion = await _getCurrentVersion();
       final versionData = await _getVersionDataFromFirestore();
       
@@ -32,9 +27,23 @@ class VersionCheckService {
       
       final latestVersion = versionData['version'] as String?;
       final downloadLink = versionData['link'] as String?;
+      final lastSupported = versionData['lastSupported'] as String?;
       
       if (latestVersion == null || downloadLink == null) {
         print('Invalid version data structure');
+        return;
+      }
+      
+      // Check if current version is below lastSupported - FORCE UPDATE
+      if (lastSupported != null && _isVersionBelow(currentVersion, lastSupported)) {
+        if (context.mounted) {
+          _showForceUpdateDialog(context, latestVersion, downloadLink);
+        }
+        return;
+      }
+      
+      // Günde bir kez kontrol et (normal update check)
+      if (!await _shouldCheckToday()) {
         return;
       }
       
@@ -44,7 +53,7 @@ class VersionCheckService {
         return;
       }
       
-      // Version karşılaştırması
+      // Version karşılaştırması (optional update)
       if (_isNewerVersion(currentVersion, latestVersion)) {
         await _markVersionCheckDate();
         if (context.mounted) {
@@ -105,6 +114,26 @@ class VersionCheckService {
     }
   }
   
+  /// Current version'ın minimum desteklenen versiyonun altında olup olmadığını kontrol et
+  static bool _isVersionBelow(String currentVersion, String minimumVersion) {
+    try {
+      final current = _parseVersion(currentVersion);
+      final minimum = _parseVersion(minimumVersion);
+      
+      for (int i = 0; i < 3; i++) {
+        if (current[i] < minimum[i]) {
+          return true; // Current version is below minimum
+        } else if (current[i] > minimum[i]) {
+          return false; // Current version is above minimum
+        }
+      }
+      return false; // Versions are equal, so not below
+    } catch (e) {
+      print('Error comparing versions for minimum check: $e');
+      return false;
+    }
+  }
+  
   /// Version string'ini parse et
   static List<int> _parseVersion(String version) {
     final parts = version.split('.');
@@ -157,6 +186,266 @@ class VersionCheckService {
     } catch (e) {
       print('Error skipping version: $e');
     }
+  }
+  
+  /// Zorla güncelleme dialog'unu göster (lastSupported kontrolü için)
+  static void _showForceUpdateDialog(BuildContext context, String newVersion, String downloadLink) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User cannot dismiss this dialog
+      builder: (context) => PopScope(
+        canPop: false, // Prevent back button
+        child: Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header - Critical Update
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.red.shade600,
+                        Colors.red.shade700,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.priority_high,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Critical Update Required',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Your app version is no longer supported',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.orange.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber,
+                                    color: Colors.orange.shade700,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'Outdated Version Detected',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Your current app version is no longer supported. To continue using WordLune, you must update to the latest version.',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // New Version Info
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.blue.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.system_update_alt,
+                                    color: Colors.blue.shade700,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Latest Version: v$newVersion',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                '• Enhanced security features\n• Bug fixes and improvements\n• New learning features',
+                                style: TextStyle(fontSize: 11),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Warning message
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.red.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.block,
+                                color: Colors.red.shade600,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'You cannot continue using the app until you update.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Actions - Only Update and Quit
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            await _downloadAndInstallUpdate(context, downloadLink);
+                          },
+                          icon: const Icon(Icons.download, size: 18),
+                          label: const Text(
+                            'Update Now',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            // Close the app
+                            SystemNavigator.pop();
+                          },
+                          icon: const Icon(Icons.exit_to_app, size: 16),
+                          label: const Text(
+                            'Quit App',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey.shade600,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
   
   /// Güncelleme dialog'unu göster
@@ -815,7 +1104,7 @@ class VersionCheckService {
                 CircularProgressIndicator(),
                 SizedBox(height: 12),
                 Text(
-                  'Kontrol ediliyor...',
+                  'Checking for updates...',
                   style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
@@ -833,29 +1122,39 @@ class VersionCheckService {
       }
       
       if (versionData == null) {
-        _showNoUpdateDialog(context, 'Versiyon bilgisi alınamadı');
+        _showNoUpdateDialog(context, 'Version information could not be retrieved');
         return;
       }
       
       final latestVersion = versionData['version'] as String?;
       final downloadLink = versionData['link'] as String?;
+      final lastSupported = versionData['lastSupported'] as String?;
       
       if (latestVersion == null || downloadLink == null) {
-        _showNoUpdateDialog(context, 'Geçersiz versiyon bilgisi');
+        _showNoUpdateDialog(context, 'Invalid version information');
         return;
       }
       
+      // Check for force update first
+      if (lastSupported != null && _isVersionBelow(currentVersion, lastSupported)) {
+        if (context.mounted) {
+          _showForceUpdateDialog(context, latestVersion, downloadLink);
+        }
+        return;
+      }
+      
+      // Check for optional update
       if (_isNewerVersion(currentVersion, latestVersion)) {
         if (context.mounted) {
           _showUpdateDialog(context, latestVersion, downloadLink);
         }
       } else {
-        _showNoUpdateDialog(context, 'Uygulamanız güncel!');
+        _showNoUpdateDialog(context, 'Your app is up to date!');
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // Loading dialog'unu kapat
-        _showNoUpdateDialog(context, 'Hata: $e');
+        _showNoUpdateDialog(context, 'Error: $e');
       }
     }
   }

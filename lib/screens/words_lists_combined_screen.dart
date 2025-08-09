@@ -447,12 +447,12 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
         onWordAdded: (word, meaning, ipa, example, category, language) async {
           try {
             await _firestoreService.addWordWithDetails(
-              word: word,
-              translation: meaning,
-              ipa: ipa,
-              example: example,
-              category: category,
-              language: language,
+              word,
+              meaning,
+              ipa,
+              category,
+              example,
+              category,
             );
             
             if (mounted) {
@@ -484,7 +484,7 @@ class _WordsListsCombinedScreenState extends State<WordsListsCombinedScreen> wit
       builder: (context) => CreateListDialog(
         onListCreated: (name) async {
           try {
-            await _firestoreService.createList(name, description: ''); // Empty description
+            await _firestoreService.createList(name, ''); // Empty description
             
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

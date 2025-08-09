@@ -246,12 +246,12 @@ class _WordsScreenState extends State<WordsScreen> {
       builder: (context) => AddWordDialog(
         onWordAdded: (word, meaning, ipa, example, category, language) async {
           await _firestoreService.addWordWithDetails(
-            word: word,
-            translation: meaning,
-            ipa: ipa,
-            example: example,
-            category: category,
-            language: language,
+            word,
+            meaning,
+            ipa,
+            category,  // partOfSpeech
+            example,
+            'medium',  // difficulty
           );
         },
       ),

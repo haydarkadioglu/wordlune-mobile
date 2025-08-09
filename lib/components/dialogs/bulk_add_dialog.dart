@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/firestore_service.dart';
+import '../../models/word.dart';
 
 class BulkAddDialog extends StatefulWidget {
   final String listId;
@@ -102,7 +103,7 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
     }
     
     final lines = text.split('\n');
-    final words = <Map<String, dynamic>>[];
+    final words = <Word>[];
     
     for (final line in lines) {
       if (line.trim().isEmpty) continue;
@@ -125,12 +126,16 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
       }
       
       if (word.isNotEmpty && meaning.isNotEmpty) {
-        words.add({
-          'word': word,
-          'meaning': meaning,
-          'example': '',
-          'language': selectedLanguage,
-        });
+        words.add(Word(
+          id: '',
+          text: word,
+          meaning: meaning,
+          pronunciationText: '',
+          exampleSentence: '',
+          category: 'Good',
+          dateAdded: DateTime.now(),
+          language: selectedLanguage,
+        ));
       }
     }
     
@@ -143,8 +148,8 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
     
     try {
       await widget.firestoreService.addBulkWordsToList(
-        listId: widget.listId,
-        words: words,
+        widget.listId,
+        words,
       );
       
       if (context.mounted) {

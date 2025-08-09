@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/firestore_service.dart';
+import '../models/word.dart';
 
 class BulkAddScreen extends StatefulWidget {
   const BulkAddScreen({super.key});
@@ -323,10 +324,18 @@ class _BulkAddScreenState extends State<BulkAddScreen> {
         setState(() => _processedCount = i + 1);
         
         // Add to personal words with category
-        await _firestoreService.addWord(
-          _previewWords[i],
+        final word = Word(
+          id: '',
+          text: _previewWords[i],
+          meaning: '',
+          pronunciationText: '',
+          exampleSentence: '',
           category: _selectedCategory,
+          dateAdded: DateTime.now(),
+          language: 'Turkish',
         );
+        
+        await _firestoreService.addWord(word);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(

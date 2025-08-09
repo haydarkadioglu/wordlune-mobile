@@ -47,10 +47,10 @@ class WordListView extends StatelessWidget {
             sortedWords.sort((a, b) => a.word.toLowerCase().compareTo(b.word.toLowerCase()));
             break;
           case SortOption.dateAdded:
-            sortedWords.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+            sortedWords.sort((a, b) => b.createdAt.compareTo(a.createdAt));
             break;
           case SortOption.dateAddedReverse:
-            sortedWords.sort((a, b) => a.addedAt.compareTo(b.addedAt));
+            sortedWords.sort((a, b) => a.createdAt.compareTo(b.createdAt));
             break;
         }
         
@@ -60,7 +60,7 @@ class WordListView extends StatelessWidget {
             : sortedWords.where((word) =>
                 word.word.toLowerCase().contains(searchQuery) ||
                 word.meaning.toLowerCase().contains(searchQuery) ||
-                word.example.toLowerCase().contains(searchQuery)).toList();
+                word.exampleSentence.toLowerCase().contains(searchQuery)).toList();
         
         if (words.isEmpty) {
           return Center(
